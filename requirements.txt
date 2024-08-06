@@ -1,0 +1,5 @@
+feedparser
+beautifulsoup4
+urllib3
+dateparser
+requests
