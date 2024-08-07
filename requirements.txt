@@ -1,6 +1,5 @@
-beautifulsoup4
-urllib3
-dateparser
-requests
-pygooglenews
+beautifulsoup4==4.12.3
+urllib3==2.2.2
+dateparser==1.2.0
+requests==2.32.3
 feedparser<6.0.0,>=5.2.1
