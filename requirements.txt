@@ -3,4 +3,4 @@ urllib3
 dateparser
 requests
 pygooglenews
-feedparser==6.0.8
+feedparser<6.0.0,>=5.2.1
