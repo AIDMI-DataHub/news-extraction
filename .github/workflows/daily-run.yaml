@@ -22,7 +22,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pygooglenews==0.1.2 --no-deps
-        pip install feedparser<6.0.0
+        pip install 'feedparser<6.0.0'
         pip install -r requirements_base.txt
 
     - name: Run main.py
