@@ -2,7 +2,7 @@ name: Daily Run
 
 on:
   schedule:
-    - cron: '0 4 30 * * *'  # This cron expression runs the job every day at 4:30 AM UTC (10 AM IST)
+    - cron: '30 4 * * *'  # This cron expression runs the job every day at 4:30 AM UTC (10:00 AM IST)
   workflow_dispatch:  # Allows manual triggering of the workflow from the GitHub interface
 
 jobs:
