@@ -1,4 +1,6 @@
-beautifulsoup4==4.12.3
-urllib3==2.2.2
-dateparser==1.2.0
-requests==2.32.3
+pygooglenews==0.1.2
+feedparser==5.2.1
+beautifulsoup4==4.9.1
+requests==2.24.0
+dateparser==0.7.6
+pandas==2.2.0
