@@ -2,8 +2,11 @@ name: Daily Run
 
 on:
   schedule:
-    - cron: '30 4 * * *'  # This cron expression runs the job every day at 4:30 AM UTC (10:00 AM IST)
-  workflow_dispatch:  # Allows manual triggering of the workflow from the GitHub interface
+    - cron: '30 4 * * *'  # Runs daily at 4:30 AM UTC (10:00 AM IST)
+  workflow_dispatch:  # Allows manual execution
+
+permissions:
+  contents: write  # 🔥 IMPORTANT: This allows GitHub Actions to push changes
 
 jobs:
   run-script:
@@ -11,10 +14,10 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3  # Updated to latest version
 
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: '3.x'
 
@@ -29,6 +32,12 @@ jobs:
       run: |
         python main.py
 
+    - name: Debug Git Status
+      run: |
+        git status
+        git diff
+        ls -lah
+
     - name: Commit and push changes
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -36,5 +45,5 @@ jobs:
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
         git add .
-        git commit -m "Automated update of news articles"
-        git push
+        git commit -m "Automated update of news articles" || echo "No changes to commit"
+        git push origin main || echo "No changes to push"
