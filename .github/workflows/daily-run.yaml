@@ -2,52 +2,43 @@ name: Daily Run
 
 on:
   schedule:
-    - cron: '30 4 * * *'  # Runs daily at 4:30 AM UTC (10:00 AM IST)
-  workflow_dispatch:  # Allows manual execution
+    - cron: '30 4 * * *'
+  workflow_dispatch:
 
 permissions:
-  contents: write  # 🔥 IMPORTANT: This allows GitHub Actions to push changes
+  contents: write
 
 jobs:
   run-script:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3  # Updated to latest version
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          # Switch from 3.13 to 3.11
+          python-version: '3.11'
 
-    - name: Set up Miniconda
-      uses: conda-incubator/setup-miniconda@v2
-      with:
-        activate-environment: myenv
-        python-version: 3.13
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Then install from your requirements
+          pip install -r requirements.txt
+          # If pygooglenews feedparser conflict arises, override:
+          pip install --force-reinstall feedparser==6.0.10
 
-    - name: Install dependencies with Conda
-      run: |
-        conda install -y pandas=2.1.4 numpy
-        pip install --no-deps -r requirements.txt
+      - name: Run script
+        run: |
+          python main.py
 
-    - name: Run main.py
-      run: |
-        python main.py
-
-    - name: Debug Git Status
-      run: |
-        git status
-        git diff
-        ls -lah
-
-    - name: Commit and push changes
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add .
-        git commit -m "Automated update of news articles" || echo "No changes to commit"
-        git push origin main || echo "No changes to push"
+      - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add .
+          git commit -m "Automated update of news articles" || echo "No changes to commit"
+          git push origin main || echo "No changes to push"
