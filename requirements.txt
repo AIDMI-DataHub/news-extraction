@@ -1,4 +1,3 @@
-pygooglenews==0.1.2
 beautifulsoup4==4.9.1
 requests==2.24.0
 dateparser==0.7.6
