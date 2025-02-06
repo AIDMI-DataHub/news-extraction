@@ -6,7 +6,7 @@ import pandas as pd
 import time
 import pygooglenews
 
-from language_map import get_language_for_region  # <-- import your helper
+from language_map import get_language_for_region  # Import helper function
 
 def run_heatwave_script():
     today = datetime.utcnow()
@@ -15,16 +15,10 @@ def run_heatwave_script():
     from_date = yesterday.strftime('%Y-%m-%d')
     to_date = today.strftime('%Y-%m-%d')
 
-    current_year = datetime.now().year
-
-    # Define multiple search terms for heat/heatwave
+    # Multiple search terms for heatwave-related news
     heat_terms = [
-        "heat", 
-        "heatwave", 
-        "heatstroke", 
-        "humidity", 
-        "heat exhaustion", 
-        "hot weather"
+        "heat", "heatwave", "heatstroke", "humidity", 
+        "heat exhaustion", "hot weather"
     ]
 
     states = [
@@ -44,21 +38,18 @@ def run_heatwave_script():
     for region in states + union_territories:
         region_lang = get_language_for_region(region)
 
-        # We'll do a 2-pass search: once in local language, once in English
         for lang_code in [region_lang, "en"]:
             gn = pygooglenews.GoogleNews(lang=lang_code, country='IN')
 
-            # Build the query using OR for multiple heat terms
-            # e.g. "(heat OR heatwave OR heatstroke OR ... ) in {region}"
+            # Query multiple terms using OR
             query_string = ' OR '.join(heat_terms)
             query = f"({query_string}) in {region.replace('-', ' ')}"
             
-            print("🔍 Query:", query, "| Language:", lang_code)
+            print(f"🔍 Query: {query} | Language: {lang_code}")
 
             all_entries = []
             try:
                 results = gn.search(query=query, from_=from_date, to_=to_date)
-                print(f"🛠 Debug: Raw results for '{query}' in [{lang_code}]: {results}")
 
                 if not results or 'entries' not in results or not results['entries']:
                     print(f"⚠ No results found for {query} in [{lang_code}].")
@@ -71,14 +62,9 @@ def run_heatwave_script():
                 print(f"❌ Error searching for {region} in [{lang_code}]: {e}")
 
             if all_entries:
-                save_results(all_entries, 
-                             'states' if region in states else 'union-territories', 
-                             region, 
-                             datetime.now())
-            else:
-                print(f"⚠ No articles saved for {region} in [{lang_code}].")
+                save_results(all_entries, 'states' if region in states else 'union-territories', region, datetime.now())
 
-            time.sleep(2)  # Adjust as needed to reduce blocking
+            time.sleep(2)
 
 def extract_results(results, term, lang_code):
     extracted_entries = []
@@ -87,21 +73,10 @@ def extract_results(results, term, lang_code):
         link = entry.link
         date = convert_gmt_to_ist(entry.published)
 
-        source = ""
-        if hasattr(entry, 'source') and hasattr(entry.source, 'title'):
-            source = entry.source.title
-
+        source = entry.source.title if hasattr(entry, 'source') and hasattr(entry.source, 'title') else ""
         summary = entry.summary if hasattr(entry, 'summary') else ""
 
-        extracted_entries.append([
-            title,         # Title
-            link,          # Link
-            date,          # Date (converted to IST)
-            source,        # Source
-            summary,       # Summary
-            term,          # e.g. "Heatwave"
-            lang_code      # LanguageQueried
-        ])
+        extracted_entries.append([title, link, date, source, summary, term, lang_code])
     
     return extracted_entries
 
@@ -109,32 +84,24 @@ def save_results(all_entries, region_type, region_name, current_date):
     if not all_entries:
         return
 
-    year = current_date.year
-    month = current_date.strftime("%m")
-    day = current_date.strftime("%d")
-
-    path = f"data/{region_type}/{region_name}/Heatwave/{year}/{month}/{day}"
+    path = f"data/{region_type}/{region_name}/Heatwave/{current_date.year}/{current_date.strftime('%m')}/{current_date.strftime('%d')}"
     os.makedirs(path, exist_ok=True)
     file_path = os.path.join(path, 'results.csv')
 
     columns = ["Title", "Link", "Date", "Source", "Summary", "Term", "LanguageQueried"]
     df = pd.DataFrame(all_entries, columns=columns)
 
-    # Append to the CSV; write header only if the file doesn't exist
     df.to_csv(file_path, mode='a', header=not os.path.exists(file_path), index=False)
-
-    print(f"✅ CSV file updated for Heatwave in {region_name}.")
+    print(f"✅ CSV updated for Heatwave in {region_name}.")
 
 def convert_gmt_to_ist(gmt_datetime):
-    gmt_format = "%a, %d %b %Y %H:%M:%S %Z"
-    gmt = pytz.timezone('GMT')
-    ist = pytz.timezone('Asia/Kolkata')
-
     try:
+        gmt_format = "%a, %d %b %Y %H:%M:%S %Z"
+        gmt = pytz.timezone('GMT')
+        ist = pytz.timezone('Asia/Kolkata')
         gmt_dt = datetime.strptime(gmt_datetime, gmt_format)
-        gmt_dt = gmt.localize(gmt_dt)  # attach GMT tz
-        ist_dt = gmt_dt.astimezone(ist)
-        return ist_dt.strftime("%Y-%m-%d %H:%M:%S")
+        gmt_dt = gmt.localize(gmt_dt)
+        return gmt_dt.astimezone(ist).strftime("%Y-%m-%d %H:%M:%S")
     except ValueError:
         return gmt_datetime
 
