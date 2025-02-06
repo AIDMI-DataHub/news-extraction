@@ -6,7 +6,9 @@ def create_folders():
     base_path = 'data'
     states = ["andhra-pradesh", "arunachal-pradesh", "assam", "bihar", "chhattisgarh", "goa", "gujarat", "haryana", "himachal-pradesh", "jharkhand", "karnataka", "kerala", "madhya-pradesh", "maharashtra", "manipur", "meghalaya", "mizoram", "nagaland", "odisha", "punjab", "rajasthan", "sikkim", "tamil-nadu", "telangana", "tripura", "uttar-pradesh", "uttarakhand", "west-bengal"]
     union_territories = ["andaman-and-nicobar-islands", "chandigarh", "dadra-and-nagar-haveli-and-daman-and-diu", "lakshadweep", "delhi", "puducherry", "jammu-and-kashmir", "ladakh"]
-    climate_events = ["Monsoon", "Heatwave"]
+    
+    # Add "Disasters" as a climate event
+    climate_events = ["Monsoon", "Heatwave", "Disasters"]
     year = datetime.now().year
 
     for state in states:
