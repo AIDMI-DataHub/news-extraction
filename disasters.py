@@ -1,5 +1,4 @@
 # disasters.py
-
 from datetime import datetime, timedelta
 import pytz
 import os
@@ -7,7 +6,7 @@ import pandas as pd
 import time
 import pygooglenews
 
-from language_map import get_language_for_region  # <-- IMPORTANT
+from language_map import get_language_for_region  # Import helper function
 
 def run_disaster_script():
     today = datetime.utcnow()
@@ -16,7 +15,12 @@ def run_disaster_script():
     from_date = yesterday.strftime('%Y-%m-%d')
     to_date = today.strftime('%Y-%m-%d')
 
-    current_year = datetime.now().year
+    # Multiple search terms for disaster-related news
+    disaster_terms = [
+        "Cyclone", "Typhoon", "Flood", "Earthquake", 
+        "Wildfire", "Hurricane", "Landslide", "Tsunami", 
+        "Drought", "Severe Storm"
+    ]
 
     states = [
         "andhra-pradesh", "arunachal-pradesh", "assam", "bihar", "chhattisgarh", 
@@ -31,20 +35,17 @@ def run_disaster_script():
         "puducherry", "jammu-and-kashmir", "ladakh"
     ]
 
-    disaster_terms = ["Cyclone", "Typhoon", "Flood", "Earthquake", 
-                      "Wildfire", "Hurricane", "Landslide", "Tsunami", 
-                      "Drought", "Severe Storm"]
-    
     for region in states + union_territories:
         region_lang = get_language_for_region(region)
 
-        # Two queries: local language, then English
         for lang_code in [region_lang, "en"]:
             gn = pygooglenews.GoogleNews(lang=lang_code, country='IN')
+
+            query_string = ' OR '.join(disaster_terms)
+            query = f"({query_string}) in {region.replace('-', ' ')}"
             
-            query = f"({ ' OR '.join(disaster_terms) }) in {region.replace('-', ' ')} {current_year}"
-            print("🔍 Query:", query, "| Language:", lang_code)
-            
+            print(f"🔍 Query: {query} | Language: {lang_code}")
+
             all_entries = []
             try:
                 results = gn.search(query=query, from_=from_date, to_=to_date)
@@ -53,7 +54,6 @@ def run_disaster_script():
                     print(f"⚠ No results found for {query} in [{lang_code}].")
                     continue
 
-                # Extract
                 entries = extract_results(results, "Disaster", lang_code)
                 all_entries.extend(entries)
 
@@ -61,16 +61,9 @@ def run_disaster_script():
                 print(f"❌ Error searching for {region} in [{lang_code}]: {e}")
 
             if all_entries:
-                save_results(
-                    all_entries, 
-                    'states' if region in states else 'union-territories', 
-                    region, 
-                    datetime.now()
-                )
-            else:
-                print(f"⚠ No articles saved for {region} in [{lang_code}].")
+                save_results(all_entries, 'states' if region in states else 'union-territories', region, datetime.now())
 
-            time.sleep(2)  # Slight sleep to avoid block
+            time.sleep(2)
 
 def extract_results(results, term, lang_code):
     extracted_entries = []
@@ -78,55 +71,38 @@ def extract_results(results, term, lang_code):
         title = entry.title
         link = entry.link
         date = convert_gmt_to_ist(entry.published)
+
         source = entry.source.title if hasattr(entry, 'source') and hasattr(entry.source, 'title') else ""
         summary = entry.summary if hasattr(entry, 'summary') else ""
-        place = ""
 
-        # Add LanguageQueried column
-        extracted_entries.append([
-            title, 
-            link, 
-            date, 
-            source, 
-            summary, 
-            place, 
-            term, 
-            lang_code  # <--- new
-        ])
+        extracted_entries.append([title, link, date, source, summary, term, lang_code])
+    
     return extracted_entries
 
 def save_results(all_entries, region_type, region_name, current_date):
     if not all_entries:
         return
 
-    year = current_date.year
-    month = current_date.strftime("%m")
-    day = current_date.strftime("%d")
-
-    path = f"data/{region_type}/{region_name}/Disasters/{year}/{month}/{day}"
+    path = f"data/{region_type}/{region_name}/Heatwave/{current_date.year}/{current_date.strftime('%m')}/{current_date.strftime('%d')}"
     os.makedirs(path, exist_ok=True)
     file_path = os.path.join(path, 'results.csv')
 
-    # Notice we added LanguageQueried
-    columns = ["Title", "Link", "Date", "Source", "Summary", "Place", "Term", "LanguageQueried"]
+    columns = ["Title", "Link", "Date", "Source", "Summary", "Term", "LanguageQueried"]
     df = pd.DataFrame(all_entries, columns=columns)
 
-    df.to_csv(file_path, mode='a', header=not os.path.exists(file_path), index=False, chunksize=500)
-
-    print(f"✅ CSV file updated successfully for Disasters in {region_name}.")
+    df.to_csv(file_path, mode='a', header=not os.path.exists(file_path), index=False)
+    print(f"✅ CSV updated for Heatwave in {region_name}.")
 
 def convert_gmt_to_ist(gmt_datetime):
-    gmt_format = "%a, %d %b %Y %H:%M:%S %Z"
-    gmt = pytz.timezone('GMT')
-    ist = pytz.timezone('Asia/Kolkata')
-
     try:
+        gmt_format = "%a, %d %b %Y %H:%M:%S %Z"
+        gmt = pytz.timezone('GMT')
+        ist = pytz.timezone('Asia/Kolkata')
         gmt_dt = datetime.strptime(gmt_datetime, gmt_format)
         gmt_dt = gmt.localize(gmt_dt)
-        ist_dt = gmt_dt.astimezone(ist)
-        return ist_dt.strftime("%Y-%m-%d %H:%M:%S")
+        return gmt_dt.astimezone(ist).strftime("%Y-%m-%d %H:%M:%S")
     except ValueError:
         return gmt_datetime
 
 if __name__ == "__main__":
-    run_disaster_script()
+    run_heatwave_script()
