@@ -16,7 +16,8 @@ def run_monsoon_script():
     from_date = yesterday.strftime('%Y-%m-%d')
     to_date = today.strftime('%Y-%m-%d')
 
-    current_year = datetime.now().year  # e.g., 2025
+    # We no longer append the current year to the query
+    # current_year = datetime.now().year  # No longer used
 
     states = [
         "andhra-pradesh", "arunachal-pradesh", "assam", "bihar", "chhattisgarh", "goa", 
@@ -35,15 +36,13 @@ def run_monsoon_script():
                      "Dengue outbreak", "Waterlogging", "Storm surge"]
     
     for region in states + union_territories:
-        # Get the region’s local language
         region_lang = get_language_for_region(region)
 
-        # Query in local language and in English
         for lang_code in [region_lang, "en"]:
             gn = pygooglenews.GoogleNews(lang=lang_code, country='IN')
 
-            # Build the query 
-            query = f"({ ' OR '.join(monsoon_terms) }) in {region.replace('-', ' ')} {current_year}"
+            # Removed current_year from the query string
+            query = f"({ ' OR '.join(monsoon_terms) }) in {region.replace('-', ' ')}"
             print("🔍 Query:", query, "| Language:", lang_code)
 
             all_entries = []
@@ -53,14 +52,12 @@ def run_monsoon_script():
                     print(f"⚠ No results found for {query} in [{lang_code}].")
                     continue
 
-                # Extract the entries
                 entries = extract_results(results, "Monsoon", lang_code)
                 all_entries.extend(entries)
 
             except Exception as e:
                 print(f"❌ Error searching for {region} in [{lang_code}]: {e}")
 
-            # Save if we found anything
             if all_entries:
                 save_results(
                     all_entries,
@@ -71,9 +68,8 @@ def run_monsoon_script():
             else:
                 print(f"⚠ No articles saved for {region} in [{lang_code}].")
 
-            # Slight delay to reduce risk of block. Adjust up/down as needed.
             time.sleep(2)
-
+            
 def extract_results(results, term, lang_code):
     extracted_entries = []
     for entry in results.get('entries', []):
