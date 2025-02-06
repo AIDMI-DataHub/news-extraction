@@ -15,17 +15,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          # Pin to Python 3.9 exactly
-          python-version: '3.9'
+          python-version: '3.9'  # Explicitly use Python 3.9
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # 1) Install pygooglenews ignoring its feedparser requirement
-          pip install pygooglenews==0.1.2 --no-deps
-          # 2) Force feedparser==6.0.0
+          pip install pygooglenews==0.1.2 --no-deps --no-input
           pip install feedparser==6.0.0
-          # 3) Install everything else from requirements.txt
           pip install -r requirements.txt
 
       - name: Run main.py
