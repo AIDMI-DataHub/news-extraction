@@ -24,8 +24,8 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install --force-reinstall feedparser==6.0.10  # Override feedparser version
+        pip install --prefer-binary -r requirements.txt
+        pip install --prefer-binary --force-reinstall feedparser==6.0.10
 
     - name: Run main.py
       run: |
