@@ -6,12 +6,12 @@ def get_language_for_region(region_name: str) -> str:
     We'll also use 'en' for states or UTs that do not have a well-supported code in Google News.
     """
     language_mapping = {
-        "andhra-pradesh": "te",    # Telugu
-        "arunachal-pradesh": "en", # fallback to English
+        "andhra-pradesh": "te",
+        "arunachal-pradesh": "en",
         "assam": "as",
         "bihar": "hi",
         "chhattisgarh": "hi",
-        "goa": "en",              # 'gom' is not well supported
+        "goa": "en",
         "gujarat": "gu",
         "haryana": "hi",
         "himachal-pradesh": "hi",

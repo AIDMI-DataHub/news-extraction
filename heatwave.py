@@ -6,16 +6,12 @@ import pandas as pd
 import time
 import pygooglenews
 
-from language_map import get_language_for_region  # Import helper function
+from language_map import get_language_for_region
 
 def run_heatwave_script():
-    today = datetime.utcnow()
-    yesterday = today - timedelta(1)
+    # Use 'when=1d' to filter the last day's articles
+    when_parameter = '1d'
 
-    from_date = yesterday.strftime('%Y-%m-%d')
-    to_date = today.strftime('%Y-%m-%d')
-
-    # Multiple search terms for heatwave-related news
     heat_terms = [
         "heat", "heatwave", "heatstroke", "humidity", 
         "heat exhaustion", "hot weather"
@@ -41,7 +37,6 @@ def run_heatwave_script():
         for lang_code in [region_lang, "en"]:
             gn = pygooglenews.GoogleNews(lang=lang_code, country='IN')
 
-            # Query multiple terms using OR
             query_string = ' OR '.join(heat_terms)
             query = f"({query_string}) in {region.replace('-', ' ')}"
             
@@ -49,7 +44,8 @@ def run_heatwave_script():
 
             all_entries = []
             try:
-                results = gn.search(query=query, from_=from_date, to_=to_date)
+                # Use 'when=1d' to avoid date parse error
+                results = gn.search(query=query, when=when_parameter)
 
                 if not results or 'entries' not in results or not results['entries']:
                     print(f"⚠ No results found for {query} in [{lang_code}].")
@@ -62,7 +58,12 @@ def run_heatwave_script():
                 print(f"❌ Error searching for {region} in [{lang_code}]: {e}")
 
             if all_entries:
-                save_results(all_entries, 'states' if region in states else 'union-territories', region, datetime.now())
+                save_results(
+                    all_entries, 
+                    'states' if region in states else 'union-territories', 
+                    region, 
+                    datetime.now()
+                )
 
             time.sleep(2)
 
@@ -73,7 +74,10 @@ def extract_results(results, term, lang_code):
         link = entry.link
         date = convert_gmt_to_ist(entry.published)
 
-        source = entry.source.title if hasattr(entry, 'source') and hasattr(entry.source, 'title') else ""
+        source = ""
+        if hasattr(entry, 'source') and hasattr(entry.source, 'title'):
+            source = entry.source.title
+
         summary = entry.summary if hasattr(entry, 'summary') else ""
 
         extracted_entries.append([title, link, date, source, summary, term, lang_code])
@@ -107,4 +111,3 @@ def convert_gmt_to_ist(gmt_datetime):
 
 if __name__ == "__main__":
     run_heatwave_script()
-    

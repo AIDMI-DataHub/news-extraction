@@ -6,16 +6,14 @@ import pandas as pd
 import time
 import pygooglenews
 
-from language_map import get_language_for_region  # Import helper function
+from language_map import get_language_for_region
 
 def run_disaster_script():
-    today = datetime.utcnow()
-    yesterday = today - timedelta(1)
+    # We'll use the 'when' parameter instead of from_ / to_ 
+    # to avoid "Could not parse your date" errors
+    # e.g. last 1 day
+    when_parameter = '1d'
 
-    from_date = yesterday.strftime('%Y-%m-%d')
-    to_date = today.strftime('%Y-%m-%d')
-
-    # Multiple search terms for disaster-related news
     disaster_terms = [
         "Cyclone", "Typhoon", "Flood", "Earthquake", 
         "Wildfire", "Hurricane", "Landslide", "Tsunami", 
@@ -37,18 +35,17 @@ def run_disaster_script():
 
     for region in states + union_territories:
         region_lang = get_language_for_region(region)
-
         for lang_code in [region_lang, "en"]:
             gn = pygooglenews.GoogleNews(lang=lang_code, country='IN')
 
             query_string = ' OR '.join(disaster_terms)
             query = f"({query_string}) in {region.replace('-', ' ')}"
-            
             print(f"🔍 Query: {query} | Language: {lang_code}")
 
             all_entries = []
             try:
-                results = gn.search(query=query, from_=from_date, to_=to_date)
+                # Use 'when=' instead of from_/to_ to bypass date parse errors
+                results = gn.search(query=query, when=when_parameter)
 
                 if not results or 'entries' not in results or not results['entries']:
                     print(f"⚠ No results found for {query} in [{lang_code}].")
@@ -56,12 +53,14 @@ def run_disaster_script():
 
                 entries = extract_results(results, "Disaster", lang_code)
                 all_entries.extend(entries)
-
             except Exception as e:
                 print(f"❌ Error searching for {region} in [{lang_code}]: {e}")
 
             if all_entries:
-                save_results(all_entries, 'states' if region in states else 'union-territories', region, datetime.now())
+                save_results(all_entries, 
+                             'states' if region in states else 'union-territories', 
+                             region, 
+                             datetime.now())
 
             time.sleep(2)
 
@@ -75,15 +74,20 @@ def extract_results(results, term, lang_code):
         source = entry.source.title if hasattr(entry, 'source') and hasattr(entry.source, 'title') else ""
         summary = entry.summary if hasattr(entry, 'summary') else ""
 
-        extracted_entries.append([title, link, date, source, summary, term, lang_code])
-    
+        extracted_entries.append([
+            title,
+            link,
+            date,
+            source,
+            summary,
+            term,
+            lang_code
+        ])
     return extracted_entries
 
 def save_results(all_entries, region_type, region_name, current_date):
-    if not all_entries:
-        return
-
-    path = f"data/{region_type}/{region_name}/Heatwave/{current_date.year}/{current_date.strftime('%m')}/{current_date.strftime('%d')}"
+    # ✅ Correct subfolder for "Disasters" 
+    path = f"data/{region_type}/{region_name}/Disasters/{current_date.year}/{current_date.strftime('%m')}/{current_date.strftime('%d')}"
     os.makedirs(path, exist_ok=True)
     file_path = os.path.join(path, 'results.csv')
 
@@ -91,7 +95,7 @@ def save_results(all_entries, region_type, region_name, current_date):
     df = pd.DataFrame(all_entries, columns=columns)
 
     df.to_csv(file_path, mode='a', header=not os.path.exists(file_path), index=False)
-    print(f"✅ CSV updated for Heatwave in {region_name}.")
+    print(f"✅ CSV updated for Disasters in {region_name}.")
 
 def convert_gmt_to_ist(gmt_datetime):
     try:
@@ -105,4 +109,4 @@ def convert_gmt_to_ist(gmt_datetime):
         return gmt_datetime
 
 if __name__ == "__main__":
-    run_heatwave_script()
+    run_disaster_script()

@@ -1,16 +1,28 @@
+# utils.py
 import os
 from datetime import datetime
 import calendar
 
 def create_folders():
     base_path = 'data'
-    states = ["andhra-pradesh", "arunachal-pradesh", "assam", "bihar", "chhattisgarh", "goa", "gujarat", "haryana", "himachal-pradesh", "jharkhand", "karnataka", "kerala", "madhya-pradesh", "maharashtra", "manipur", "meghalaya", "mizoram", "nagaland", "odisha", "punjab", "rajasthan", "sikkim", "tamil-nadu", "telangana", "tripura", "uttar-pradesh", "uttarakhand", "west-bengal"]
-    union_territories = ["andaman-and-nicobar-islands", "chandigarh", "dadra-and-nagar-haveli-and-daman-and-diu", "lakshadweep", "delhi", "puducherry", "jammu-and-kashmir", "ladakh"]
+    states = [
+        "andhra-pradesh", "arunachal-pradesh", "assam", "bihar", 
+        "chhattisgarh", "goa", "gujarat", "haryana", "himachal-pradesh", 
+        "jharkhand", "karnataka", "kerala", "madhya-pradesh", "maharashtra", 
+        "manipur", "meghalaya", "mizoram", "nagaland", "odisha", "punjab", 
+        "rajasthan", "sikkim", "tamil-nadu", "telangana", "tripura", 
+        "uttar-pradesh", "uttarakhand", "west-bengal"
+    ]
+    union_territories = [
+        "andaman-and-nicobar-islands", "chandigarh", 
+        "dadra-and-nagar-haveli-and-daman-and-diu", "lakshadweep", "delhi", 
+        "puducherry", "jammu-and-kashmir", "ladakh"
+    ]
     
-    # Add "Disasters" as a climate event
     climate_events = ["Monsoon", "Heatwave", "Disasters"]
     year = datetime.now().year
 
+    # Create subfolders for each state/UT, event, year, month, day
     for state in states:
         for event in climate_events:
             for month in range(1, 13):
